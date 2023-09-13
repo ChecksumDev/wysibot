@@ -1,4 +1,4 @@
-name: Docker
+name: Build and push
 
 on:
   push:
@@ -8,10 +8,6 @@ on:
   pull_request:
     branches:
       - main
-
-permissions:
-  contents: read
-  packages: write
 
 jobs:
   build:
@@ -34,17 +30,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ github.token }}
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Build
-        run: bun build --minify --target=node src/index.ts --outfile=dist/index.js
 
       - name: Build and push
         uses: docker/build-push-action@v4
