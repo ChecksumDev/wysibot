@@ -1,6 +1,7 @@
 FROM debian:stable-slim
 
 # Install dependencies
+RUN apt update
 RUN apt install -y curl unzip
 
 # Install Bun
