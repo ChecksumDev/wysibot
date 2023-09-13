@@ -31,6 +31,14 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ github.token }}
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Build
+        run: bun build --minify --target=node src/index.ts --outfile=dist/index.js
+
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
