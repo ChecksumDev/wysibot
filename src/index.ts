@@ -93,48 +93,55 @@ class WYSIBot {
     }
 
     private async onScore(score: any) {
-        let acc = (Math.round(score.accuracy * 10000) / 100).toString();
-        let accString = acc.replace('.', '');
-        if (!accString.includes('727')) return
+        try {
+            let acc = (Math.round(score.accuracy * 10000) / 100).toString();
+            let accString = acc.replace('.', '');
+            if (!accString.includes('727')) return
 
-        let player = await fetch(`https://api.beatleader.xyz/player/${score.playerId}?stats=true`)
-            .then(response => response.json())
-            .then(data => data);
+            let response = await fetch(`https://api.beatleader.xyz/player/${score.playerId}?stats=true`);
+            let player = await response.json();
 
-        let url = `https://replay.beatleader.xyz/?scoreId=${score.id}`;
+            let url = `https://replay.beatleader.xyz/?scoreId=${score.id}`;
 
-        const twitter = player.socials.find((social: any) => social.service === 'Twitter');
-        const playername = twitter ? `@${twitter.link.split('/')[3]}` : player.name;
+            const twitter = player.socials.find((social: any) => social.service === 'Twitter');
+            const playername = twitter ? `@${twitter.link.split('/')[3]}` : player.name;
 
-        const twitch = player.socials.find((social: any) => social.service === 'Twitch');
+            const twitch = player.socials.find((social: any) => social.service === 'Twitch');
 
-        if (twitch) {
-            let twitch_username = await this.twitchApi.users.getUserById(twitch.userId).then(user => user?.name);
-            if (twitch_username) {
-                let stream = await this.twitchApi.streams.getStreamByUserName(twitch_username).then(stream => stream);
+            if (twitch) {
+                let twitchUser = await this.twitchApi.users.getUserById(twitch.userId);
+                if (twitchUser?.name) {
+                    let stream = await this.twitchApi.streams.getStreamByUserName(twitchUser.name);
 
-                if (stream) {
-                    url = `https://twitch.tv/${twitch_username}`;
+                    if (stream) {
+                        url = `https://twitch.tv/${twitchUser.name}`;
 
-                    try {
-                        let clip = await this.twitchApi.clips.createClip({ channel: stream.userId })
-                        url = clip;
-                    } catch (e) {
-                        console.log(e);
+                        try {
+                            let clip = await this.twitchApi.clips.createClip({ channel: twitch.userId });
+                            if (clip) {
+                                url = clip;
+                            }
+                        } catch (e) {
+                            console.error(e);
+                        }
+
+                        await this.twitchChat.join(twitchUser.name);
+                        await this.twitchChat.say(twitchUser.name, `! WHEN YOU SEE IT! You just got ${acc}% on ${score.leaderboard.song.name} (${score.leaderboard.difficulty.difficultyName}) ${url}`);
                     }
                 }
-
-                await this.twitchChat.join(twitch_username);
-                await this.twitchChat.say(twitch_username, `! WHEN YOU SEE IT! You just got ${acc}% on ${score.leaderboard.song.name} (${score.leaderboard.difficulty.difficultyName}) ${url}`);
             }
+
+            let tweet = `#WYSI ${playername} just got ${acc}% on ${score.leaderboard.song.name} (${score.leaderboard.difficulty.difficultyName}) on #BeatSaber! ${url}`;
+            if (this.twitterClient) await this.twitterClient.v2.tweet(tweet);
+            await this.twitchChat.say('wysibot', `${score.player.name} just got ${acc}% on ${score.leaderboard.song.name} (${score.leaderboard.difficulty.difficultyName}) ${url}`);
+
+            console.log(tweet);
+
+        } catch (error) {
+            console.error('Error in onScore:', error);
         }
-
-        let tweet = `#WYSI ${playername} just got ${acc}% on ${score.leaderboard.song.name} (${score.leaderboard.difficulty.difficultyName}) on #BeatSaber! ${url}`;
-        await this.twitterClient?.v2.tweet(tweet);
-        await this.twitchChat.say('wysibot', `${score.player.name} just got ${acc}% on ${score.leaderboard.song.name} (${score.leaderboard.difficulty.difficultyName}) ${url}`);
-
-        console.log(tweet);
     }
+
     private updateTokens(type: string, data: string) {
         let acq = this.db.prepare(`INSERT OR REPLACE INTO settings (key, value) VALUES ('${type}', $data)`);
         acq.all({ $data: data });
