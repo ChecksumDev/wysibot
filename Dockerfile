@@ -1,13 +1,17 @@
-FROM oven/bun
+FROM debian:stable-slim
+
+# Install dependencies
+RUN apt install -y curl unzip
+
+# Install Bun
+RUN curl -fsSL https://bun.sh/install | bash 
 
 # Create a user
 RUN adduser --system --disabled-password --no-create-home --uid 727 --group --shell /bin/bash wysi
 USER wysi
 
-# Set the working directory
+# Create a working directory and copy the source code
 WORKDIR /srv/wysibotbs
-
-# Copy files
 COPY . .
 
 # Install dependencies
