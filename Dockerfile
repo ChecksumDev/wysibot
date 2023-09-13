@@ -1,8 +1,5 @@
 FROM debian:stable-slim
 
-# Switch to the bash shell
-SHELL ["/bin/bash", "-c"]
-
 # Install dependencies
 RUN apt update
 RUN apt install -y curl unzip
@@ -10,6 +7,9 @@ RUN apt install -y curl unzip
 # Create a user
 RUN adduser --system --disabled-password --uid 727 --group --shell /bin/bash wysi
 USER wysi
+
+# Switch to the bash shell
+SHELL ["/bin/bash", "-c"]
 
 # Install Bun
 RUN curl -fsSL https://bun.sh/install | bash 
