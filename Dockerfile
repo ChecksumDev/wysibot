@@ -1,7 +1,7 @@
 FROM oven/bun
 
 # Create a user
-RUN adduser --system --disabled-password --no-create-home --uid 1000 --group --shell /bin/bash wysi
+RUN adduser --system --disabled-password --no-create-home --uid 727 --group --shell /bin/bash wysi
 USER wysi
 
 # Copy files
