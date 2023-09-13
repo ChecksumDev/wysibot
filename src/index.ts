@@ -17,7 +17,7 @@ class WYSIBot {
     private twitchApi: ApiClient;
     private twitchChat: ChatClient;
 
-    private websocket: WebSocket = new WebSocket('wss://api.beatleader.xyz/scores');
+    private websocket: WebSocket;
     private db: Database;
 
     constructor() {
@@ -56,6 +56,27 @@ class WYSIBot {
         );`);
     }
 
+    connectBeatLeader() {
+        this.ws = new Websocket('wss://api.beatleader.xyz/scores')
+
+        this.websocket.onopen = () => {
+            console.log('Connected to BeatLeader.');
+        }
+
+        this.websocket.onclose = () => {
+            console.log('Disconnected from BeatLeader, reconnecting...');
+            setTimeout(() => {
+                this.connectBeatLeader()
+            }, 1000);
+        }
+
+        this.websocket.onmessage = async (event) => {
+            let data = event.data instanceof Buffer ? event.data.toString() : event.data;
+            let score = JSON.parse(data);
+            await this.onScore(score);
+        }
+    }
+
     async run() {
         console.log('Starting...');
         await this.initTwitch();
@@ -68,20 +89,7 @@ class WYSIBot {
         this.twitchApi = new ApiClient({ authProvider: this.twitchAuthProvider });
         this.twitchChat.connect();
 
-        this.websocket.onopen = () => {
-            console.log('Connected to BeatLeader.');
-        }
-
-        this.websocket.onclose = () => {
-            console.log('Disconnected from BeatLeader, reconnecting...');
-            this.websocket = new WebSocket('wss://api.beatleader.xyz/scores');
-        }
-
-        this.websocket.onmessage = async (event) => {
-            let data = event.data instanceof Buffer ? event.data.toString() : event.data;
-            let score = JSON.parse(data);
-            await this.onScore(score);
-        }
+        this.connectBeatLeader()
     }
 
     private async onScore(score: any) {
