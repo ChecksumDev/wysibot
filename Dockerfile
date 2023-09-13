@@ -1,7 +1,7 @@
 FROM alpine:latest
 
 # Install dependencies
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl bash
 RUN curl -fsSL https://bun.sh/install | bash 
 
 # Create a user
