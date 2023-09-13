@@ -6,6 +6,7 @@ RUN apt install -y curl unzip
 
 # Install Bun
 RUN curl -fsSL https://bun.sh/install | bash 
+RUN source /root/.bashrc
 
 # Create a user
 RUN adduser --system --disabled-password --no-create-home --uid 727 --group --shell /bin/bash wysi
