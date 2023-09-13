@@ -143,17 +143,22 @@ class WYSIBot {
     }
 
     private updateTokens(type: string, data: string) {
-        let acq = this.db.prepare(`INSERT OR REPLACE INTO settings (key, value) VALUES ('${type}', $data)`);
-        acq.all({ $data: data });
+        let existing = this.db.prepare(`SELECT value FROM settings WHERE key = '${type}'`).all() as Data[];
+        if (existing.length === 0) {
+            this.db.prepare(`INSERT INTO settings (key, value) VALUES ('${type}', '${data}')`).run();
+        } else {
+            this.db.prepare(`UPDATE settings SET value = '${data}' WHERE key = '${type}'`).run();
+        }
+
     }
 
-    private getTokens(type: string): any {
-        let data = this.db.prepare(`SELECT value FROM settings WHERE key = '${type}'`).all() as Data[];
-        if (data.length === 0) {
+    private getTokens(type: string): any | null {
+        let existing = this.db.prepare(`SELECT value FROM settings WHERE key = '${type}'`).all() as Data[];
+        if (existing.length === 0) {
             return null;
         }
 
-        return JSON.parse(data[0]!.value);
+        return JSON.parse(existing[0].value);
     }
 
     private async initTwitch() {
@@ -181,7 +186,7 @@ class WYSIBot {
         let tokenData = await exchangeCode(process.env.TWITCH_CLIENT_ID!, process.env.TWITCH_CLIENT_SECRET!, code, 'http://localhost:3000');
         this.updateTokens('twitch', JSON.stringify(tokenData));
 
-        this.twitchAuthProvider.addUser(process.env.TWITCH_USER_ID!, tokenData);
+        this.twitchAuthProvider.addUser(process.env.TWITCH_USER_ID!, tokenData, ['chat'])
     }
 
     private async initTwitter() {
