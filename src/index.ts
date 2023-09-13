@@ -17,7 +17,7 @@ class WYSIBot {
     private twitchApi: ApiClient;
     private twitchChat: ChatClient;
 
-    private websocket: WebSocket;
+    private websocket: WebSocket | undefined;
     private db: Database;
 
     constructor() {
@@ -57,7 +57,7 @@ class WYSIBot {
     }
 
     connectBeatLeader() {
-        this.ws = new Websocket('wss://api.beatleader.xyz/scores')
+        this.websocket = new WebSocket('wss://api.beatleader.xyz/scores')
 
         this.websocket.onopen = () => {
             console.log('Connected to BeatLeader.');
