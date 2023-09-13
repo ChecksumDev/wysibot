@@ -6,7 +6,7 @@ USER wysi
 
 # Create a working directory and copy the source code
 WORKDIR /srv/wysibotbs
-COPY dist/index.js .
+COPY . .
 
 # Run
-CMD ["node", "index.js"]
+CMD ["node", "dist/index.js"]
