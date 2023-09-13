@@ -1,8 +1,4 @@
-FROM alpine:latest
-
-# Install dependencies
-RUN apk add --no-cache curl bash
-RUN curl -fsSL https://bun.sh/install | bash 
+FROM oven/bun
 
 # Create a user
 RUN adduser -D -u 1000 -g 1000 -s /bin/sh wysi
