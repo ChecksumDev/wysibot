@@ -4,6 +4,9 @@ FROM oven/bun
 RUN adduser --system --disabled-password --no-create-home --uid 727 --group --shell /bin/bash wysi
 USER wysi
 
+# Set the working directory
+WORKDIR /srv/wysibotbs
+
 # Copy files
 COPY . .
 
