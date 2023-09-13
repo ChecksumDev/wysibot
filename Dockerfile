@@ -1,5 +1,8 @@
 FROM debian:stable-slim
 
+# Switch to the bash shell
+SHELL ["/bin/bash", "-c"]
+
 # Install dependencies
 RUN apt update
 RUN apt install -y curl unzip
