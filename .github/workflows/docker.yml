@@ -36,6 +36,9 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Install dependencies
+        run: bun install
+
       - name: Build
         run: bun build --minify --target=node src/index.ts --outfile=dist/index.js
 
