@@ -1,4 +1,5 @@
 import { TwitterApi, TwitterApiReadWrite } from 'twitter-api-v2';
+import { TwitterApiAutoTokenRefresher } from '@twitter-api-v2/plugin-token-refresher';
 import { RefreshingAuthProvider, exchangeCode } from '@twurple/auth';
 import { Database } from "bun:sqlite";
 import { ApiClient } from '@twurple/api';
@@ -9,7 +10,6 @@ interface Data {
 }
 
 class WYSIBot {
-    private twitter: TwitterApi;
     private twitterClient: TwitterApiReadWrite | null = null;
 
     // twitch
@@ -24,11 +24,6 @@ class WYSIBot {
         if (!process.env.TWITTER_CLIENT_ID || !process.env.TWITTER_CLIENT_SECRET) {
             throw new Error('Please set TWITTER_CLIENT_ID and TWITTER_CLIENT_SECRET environment variables.');
         }
-
-        this.twitter = new TwitterApi({
-            clientId: process.env.TWITTER_CLIENT_ID,
-            clientSecret: process.env.TWITTER_CLIENT_SECRET,
-        });
 
         this.twitchAuthProvider = new RefreshingAuthProvider(
             {
@@ -82,10 +77,6 @@ class WYSIBot {
         await this.initTwitch();
         await this.initTwitter();
 
-        if (!this.twitterClient) {
-            throw new Error('No client available.');
-        }
-
         this.twitchApi = new ApiClient({ authProvider: this.twitchAuthProvider });
         this.twitchChat.connect();
 
@@ -136,7 +127,6 @@ class WYSIBot {
             await this.twitchChat.say('wysibot', `${score.player.name} just got ${acc}% on ${score.leaderboard.song.name} (${score.leaderboard.difficulty.difficultyName}) ${url}`);
 
             console.log(tweet);
-
         } catch (error) {
             console.error('Error in onScore:', error);
         }
@@ -161,7 +151,7 @@ class WYSIBot {
         return JSON.parse(existing[0].value);
     }
 
-    private async initTwitch() {
+    private async initTwitch(): Promise<any> {
         let tokenData = this.getTokens('twitch');
 
         if (!tokenData) {
@@ -186,30 +176,51 @@ class WYSIBot {
         let tokenData = await exchangeCode(process.env.TWITCH_CLIENT_ID!, process.env.TWITCH_CLIENT_SECRET!, code, 'http://localhost:3000');
         this.updateTokens('twitch', JSON.stringify(tokenData));
 
-        this.twitchAuthProvider.addUser(process.env.TWITCH_USER_ID!, tokenData, ['chat'])
+        return await this.initTwitch();
     }
 
-    private async initTwitter() {
+    private async initTwitter(): Promise<any> {
         let tokenData = this.getTokens('twitter');
 
         console.log('Checking for existing tokens...');
-        if (tokenData) {
-            console.log('Tokens found, refreshing...');
-            const { client: refreshedClient, accessToken: newAccessToken, refreshToken: newRefreshToken } = await this.twitter.refreshOAuth2Token(tokenData.refreshToken);
-
-            if (newAccessToken && newRefreshToken) {
-                this.updateTokens('twitter', JSON.stringify({ accessToken: newAccessToken, refreshToken: newRefreshToken }));
-            }
-
-            this.twitterClient = refreshedClient.readWrite;
-        } else {
+        if (!tokenData) {
             console.log('No tokens found, starting OAuth2 flow...');
             return await this.getFirstTwitterRefreshToken();
+        } else {
+            const autoRefresherPlugin = new TwitterApiAutoTokenRefresher({
+                refreshToken: this.getTokens('twitter')?.refreshToken,
+                refreshCredentials: {
+                    clientId: process.env.TWITTER_CLIENT_ID!,
+                    clientSecret: process.env.TWITTER_CLIENT_SECRET!,
+                },
+                onTokenUpdate: (token) => {
+                    console.log('Refreshing Twitter tokens...');
+                    let tokenData = { accessToken: token.accessToken, refreshToken: token.refreshToken };
+                    this.updateTokens('twitter', JSON.stringify(tokenData));
+                },
+                onTokenRefreshError: (error) => {
+                    console.error('Refresh error', error)
+                },
+            });
+
+            const twitter = new TwitterApi({
+                clientId: process.env.TWITTER_CLIENT_ID!,
+                clientSecret: process.env.TWITTER_CLIENT_SECRET!,
+            }, {
+                plugins: [autoRefresherPlugin],
+            });
+
+            this.twitterClient = twitter.readWrite;
         }
     }
 
     private async getFirstTwitterRefreshToken() {
-        let oauth = this.twitter.generateOAuth2AuthLink('http://localhost:3000', { scope: ['offline.access', 'users.read', 'tweet.read', 'tweet.write'] });
+        const temporary_twitter = new TwitterApi({
+            clientId: process.env.TWITTER_CLIENT_ID!,
+            clientSecret: process.env.TWITTER_CLIENT_SECRET!,
+        });
+
+        let oauth = temporary_twitter.generateOAuth2AuthLink('http://localhost:3000', { scope: ['offline.access', 'users.read', 'tweet.read', 'tweet.write'] });
         console.log(oauth.url);
         console.log('Please enter the code from the URL:');
 
@@ -220,15 +231,12 @@ class WYSIBot {
             });
         });
 
-        const { client: newClient, accessToken, refreshToken } = await this.twitter.loginWithOAuth2({ code: code, redirectUri: 'http://localhost:3000', codeVerifier: oauth.codeVerifier });
-        this.twitterClient = newClient.readWrite;
+        const { client: _, accessToken, refreshToken } = await temporary_twitter.loginWithOAuth2({ code: code, redirectUri: 'http://localhost:3000', codeVerifier: oauth.codeVerifier });
+        let tokenData = { accessToken: accessToken, refreshToken: refreshToken };
+        this.updateTokens('twitter', JSON.stringify(tokenData));
 
-        if (accessToken && refreshToken) {
-            this.updateTokens('twitter', JSON.stringify({ accessToken: accessToken, refreshToken: refreshToken }));
-        }
+        return await this.initTwitter();
     }
-
-
 }
 
 const bot = new WYSIBot();

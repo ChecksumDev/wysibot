@@ -10,6 +10,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@twitter-api-v2/plugin-token-refresher": "^1.0.0",
     "@twurple/api": "^7.0.2",
     "@twurple/auth": "^7.0.2",
     "@twurple/chat": "^7.0.2",
