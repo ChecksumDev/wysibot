@@ -1,4 +1,5 @@
 import { RefreshingAuthProvider, exchangeCode } from "@twurple/auth";
+import { insertOrUpdateToken } from "../utils";
 import { ApiClient } from "@twurple/api";
 import { ChatClient } from "@twurple/chat";
 import { Logger } from "winston";
@@ -27,7 +28,7 @@ export class TwitchService {
         });
 
         this.authProvider.onRefresh((twitchId: number, newTokenData: any) => {
-            this.insertOrUpdateToken(twitchId, newTokenData);
+            insertOrUpdateToken(this.db, twitchId, newTokenData, "twitchAuth");
             this.logger.info(`Refreshed token for user ${twitchId}`);
         });
 
@@ -40,13 +41,6 @@ export class TwitchService {
             authProvider: this.authProvider,
             channels: ["#wysibot"],
         });
-    }
-
-    private insertOrUpdateToken(twitchId: number | string, tokenData: any) {
-        this.db.exec(
-            "INSERT OR REPLACE INTO twitchAuth (twitchId, tokenData) VALUES (?, ?)",
-            [twitchId, JSON.stringify(tokenData)]
-        );
     }
 
     private async setupAuthProvider() {
@@ -74,9 +68,8 @@ export class TwitchService {
             );
 
             this.authProvider.addUser(process.env.TWITCH_USER_ID!, tokenData, ["chat"]);
-            this.insertOrUpdateToken(process.env.TWITCH_USER_ID!, tokenData);
+            insertOrUpdateToken(this.db, process.env.TWITCH_USER_ID!, tokenData, "twitchAuth");
         } else {
-            // token data found, add user to auth provider
             this.authProvider.addUser(process.env.TWITCH_USER_ID!, JSON.parse(result.tokenData), ["chat"]);
         }
     }
