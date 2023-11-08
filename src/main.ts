@@ -113,6 +113,7 @@ class Client {
             let twitchUrl = await this.twitchService.parseScore(twitchSocial, score);
             if (twitchUrl) url = twitchUrl;
         }
+
         if (twitterSocial) {
             username = `@${twitterSocial.link.split("/")[3]}`;
         }
@@ -121,7 +122,7 @@ class Client {
 
         await this.twitterService.twitterClient?.v2.tweet(tweet);
         await this.twitchService.chatClient.say(
-            "#wysibot",
+            "wysibot",
             `${score.player.name} just scored ${rawAcc}% on ${score.leaderboard.song.name} (${score.leaderboard.difficulty.difficultyName}) ${url}`
         );
     }
