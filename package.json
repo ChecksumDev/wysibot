@@ -1,7 +1,7 @@
 {
   "name": "wysibotbs",
   "module": "main.ts",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "devDependencies": {
     "bun-types": "latest"
