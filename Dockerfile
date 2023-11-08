@@ -6,7 +6,7 @@ COPY . .
 
 RUN bun install
 
-RUN bun build --minify --target=bun src/index.ts --outfile=dist/index.js
+RUN bun build --minify --target=bun src/main.ts --outfile=dist/main.js
 
 # Run
-CMD ["bun", "dist/index.js"]
+CMD ["bun", "dist/main.js"]
