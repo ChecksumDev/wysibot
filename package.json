@@ -1,6 +1,6 @@
 {
   "name": "wysibotbs",
-  "module": "index.ts",
+  "module": "main.ts",
   "version": "0.0.0",
   "type": "module",
   "devDependencies": {
@@ -14,6 +14,7 @@
     "@twurple/api": "^7.0.2",
     "@twurple/auth": "^7.0.2",
     "@twurple/chat": "^7.0.2",
-    "twitter-api-v2": "^1.15.1"
+    "twitter-api-v2": "^1.15.1",
+    "winston": "^3.11.0"
   }
 }
