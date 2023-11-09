@@ -5,7 +5,6 @@ import { ChatClient } from "@twurple/chat";
 import { Logger } from "winston";
 import Database from "bun:sqlite";
 import TDResult from "../TDResult";
-import { textChangeRangeIsUnchanged } from "typescript";
 
 export class TwitchService {
     private logger: Logger;
