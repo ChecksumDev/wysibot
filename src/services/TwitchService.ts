@@ -4,12 +4,8 @@ import { ApiClient } from "@twurple/api";
 import { ChatClient } from "@twurple/chat";
 import { Logger } from "winston";
 import Database from "bun:sqlite";
-
-interface TokenResult {
-    twitchId: number;
-    tokenData: string; // JSON string
-}
-
+import TDResult from "../TDResult";
+import { textChangeRangeIsUnchanged } from "typescript";
 
 export class TwitchService {
     private logger: Logger;
@@ -27,25 +23,25 @@ export class TwitchService {
             clientSecret: process.env.TWITCH_CLIENT_SECRET!,
         });
 
-        this.authProvider.onRefresh((twitchId: number, newTokenData: any) => {
-            insertOrUpdateToken(this.db, twitchId, newTokenData, "twitchAuth");
-            this.logger.info(`Refreshed token for user ${twitchId}`);
+        this.authProvider.onRefresh((id: number, newTokenData: any) => {
+            insertOrUpdateToken(this.db, id, newTokenData, "twitchAuth");
+            this.logger.info(`Refreshed Twitch token for user ${id}`);
         });
 
-        this.authProvider.onRefreshFailure((twitchId: number) => {
-            this.logger.error(`Failed to refresh token for user ${twitchId}`);
+        this.authProvider.onRefreshFailure((id: number) => {
+            this.logger.error(`Failed to refresh Twitch token for user ${id}`);
         });
 
         this.apiClient = new ApiClient({ authProvider: this.authProvider });
         this.chatClient = new ChatClient({
             authProvider: this.authProvider,
-            channels: ["#wysibot"],
+            channels: ["wysibot"],
         });
     }
 
     private async setupAuthProvider() {
-        const tokenQuery = this.db.prepare("SELECT * FROM twitchAuth WHERE twitchId = ?")
-        let result = tokenQuery.get(process.env.TWITCH_USER_ID!) as TokenResult | undefined;
+        const tokenQuery = this.db.prepare("SELECT * FROM twitchAuth WHERE id = ?")
+        let result = tokenQuery.get(process.env.TWITCH_USER_ID!) as TDResult | undefined;
 
         if (!result) {
             this.logger.info("No token data found, please authorize with the following URL:");

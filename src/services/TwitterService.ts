@@ -3,11 +3,7 @@ import { TwitterApiAutoTokenRefresher } from "@twitter-api-v2/plugin-token-refre
 import { Logger } from "winston";
 import Database from "bun:sqlite";
 import { insertOrUpdateToken } from "../utils";
-
-interface TokenResult {
-    twitterId: number;
-    tokenData: string; // JSON string
-}
+import TDResult from "../TDResult";
 
 export class TwitterService {
     private logger: Logger;
@@ -37,10 +33,10 @@ export class TwitterService {
                 },
                 onTokenUpdate: (newTokenData) => {
                     insertOrUpdateToken(this.db, 0, newTokenData, "twitterAuth");
-                    this.logger.info("Refreshed token for Twitter!");
+                    this.logger.info("Refreshed Twitter token!");
                 },
                 onTokenRefreshError: (error) => {
-                    this.logger.error("Failed to refresh token for Twitter!");
+                    this.logger.error("Failed to refresh Twitter token!");
                     this.logger.error(error);
                 }
             })]
@@ -49,8 +45,8 @@ export class TwitterService {
 
 
     private async initTwitter(): Promise<any> {
-        const tokenQuery = this.db.prepare("SELECT * FROM twitterAuth WHERE twitterId = ?")
-        let result = tokenQuery.get(0) as TokenResult | undefined;
+        const tokenQuery = this.db.prepare("SELECT * FROM twitterAuth WHERE id = ?")
+        let result = tokenQuery.get(0) as TDResult | undefined;
 
         if (!result) {
             let auth = this.twitterClient.generateOAuth2AuthLink("http://localhost:3000", { scope: ["offline.access", "users.read", "tweet.read", "tweet.write"] });

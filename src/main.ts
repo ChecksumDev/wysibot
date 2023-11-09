@@ -59,14 +59,14 @@ class Client {
     private initDatabase() {
         this.db.exec(`
             CREATE TABLE IF NOT EXISTS twitchAuth (
-                twitchId INTEGER PRIMARY KEY,
+                id INTEGER PRIMARY KEY,
                 tokenData TEXT NOT NULL
             );
         `);
 
         this.db.exec(`
             CREATE TABLE IF NOT EXISTS twitterAuth (
-                twitterId INTEGER PRIMARY KEY,
+                id INTEGER PRIMARY KEY,
                 tokenData TEXT NOT NULL
             );
         `);
