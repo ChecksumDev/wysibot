@@ -1,4 +1,4 @@
 export default interface TDResult {
-    id: number;
-    tokenData: string;
+    id: number
+    tokenData: string
 }
