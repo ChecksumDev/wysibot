@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/ChecksumDev/wysibot/compare/v1.0.0...v1.1.0) (2023-11-11)
+
+
+### Features
+
+* save scores and update logging ([44afaf0](https://github.com/ChecksumDev/wysibot/commit/44afaf0357a9316dec66985eb13045f963add92c))
+
+
+### Bug Fixes
+
+* correct database structure, use TDResult ([37764cd](https://github.com/ChecksumDev/wysibot/commit/37764cd6db95b55a946ee55467b1f0f3f8cd9307))
+* remove `#` from user prefix ([6271a63](https://github.com/ChecksumDev/wysibot/commit/6271a637b40f01de46284cae5dc22451a96cf9e5))
+
 ## 1.0.0 (2023-11-08)
 
 
